@@ -1,5 +1,10 @@
-# Copyright (c) 2022 Javier Escalada Gómez
-# All rights reserved.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Copyright (c) 2022 Javier Escalada Gómez
+All rights reserved.
+License: BSD 3-Clause Clear License (see LICENSE for details)
+"""
 
 # WARNING: This is a copy & paste & patch version from
 # https://github.com/python/cpython/blob/3.10/Lib/json/tool.py
