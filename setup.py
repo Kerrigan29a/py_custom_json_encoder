@@ -8,7 +8,7 @@ License: BSD 3-Clause Clear License (see LICENSE for details)
 
 from setuptools import setup, find_packages
 from pathlib import Path
-from custom_json_encoder import __version__, __author__, __email__, __license__
+from custom_json_encoder import __version__, __author__, __email__, __license__, __doc__
 
 base = Path(__file__).parent
 long_description = (base / "README.md").read_text()
@@ -22,7 +22,7 @@ setup(
     },
     author=__author__,
     author_email=__email__,
-    description="A JSON encoder that allows customizing the indentation based on the content and the width of the line.",
+    description=__doc__,
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
