@@ -10,40 +10,47 @@ License: BSD 3-Clause Clear License (see LICENSE for details)
 
 __author__ = "Javier Escalada Gómez"
 __email__ = "kerrigan29a@gmail.com"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __license__ = "BSD 3-Clause Clear License"
 
 # Inspiration: https://gist.github.com/jannismain/e96666ca4f059c3e5bc28abb711b5c92
 
-import json
+from json import JSONEncoder, dump, dumps
 
 
-def default_indent_hint(path, collection, indent, width):
+def indentation_policy_default(path, collection, indent, width):
+    """Default indentation policy.
+
+    Indent always except when the collection is empty.
+
+    Args:
+        path (list): The path of the current collection.
+        collection: The collection to be indented.
+        indent: The current indentation.
+        width (int): The width of the line.
+    """
     if len(collection) == 0:
         return False
-    if len(path) == 0:
-        return True
     return True
 
 
-class CustomJSONEncoder(json.JSONEncoder):
+class CustomJSONEncoder(JSONEncoder):
+    """Custom JSON encoder.
+
+    This class allows customizing the indentation based on the content and the
+    width of the line.
+    """
+
     def __init__(self, *args, **kwargs):
         if kwargs.get("indent") is None:
             kwargs.update({"indent": 2})
         if kwargs.get("separators") is None:
             kwargs.update({"separators": (",", ": ")})
-        self.compact_item_separator = ", "
-        self.compact_key_separator = ": "
-        if "compact_separators" in kwargs:
-            self.compact_item_separator, self.compact_key_separator = kwargs.pop(
-                "compact_separators"
-            )
-        self.indent_hint = default_indent_hint
-        if "indent_hint" in kwargs:
-            self.indent_hint = kwargs.pop("indent_hint")
-        self.width = 0
-        if "width" in kwargs:
-            self.width = kwargs.pop("width")
+        self.compact_item_separator, self.compact_key_separator = kwargs.pop(
+            "compact_separators", (", ", ": "))
+        self.indentation_policy = kwargs.pop("indentation_policy",
+            indentation_policy_default)
+        self.width = kwargs.pop("width", 0)
         super().__init__(*args, **kwargs)
 
     def iterencode(self, o, *args, **kwargs):
@@ -53,7 +60,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return "".join(self.iterencode(o))
 
     def _parent_encode(self, o):
-        return json.JSONEncoder.iterencode(self, o)
+        return JSONEncoder.iterencode(self, o)
 
     def _iterencode(self, o, path):
         depth = len(path)
@@ -88,10 +95,20 @@ class CustomJSONEncoder(json.JSONEncoder):
 
         else:
             yield from self._parent_encode(o)
+    
+    def _indent_str(self):
+        if isinstance(self.indent, int):
+            return self.indent * " "
+        return self.indent
+
+    def _indent_len(self):
+        if isinstance(self.indent, int):
+            return self.indent
+        return len(self.indent)
 
     def _config(self, path, collection):
-        if self.indent_hint(path, collection, self.indent, self.width):
-            return "\n", " " * self.indent, self.item_separator, self.key_separator
+        if self.indentation_policy(path, collection, self.indent, self.width):
+            return "\n", self._indent_str(), self.item_separator, self.key_separator
         return "", "", self.compact_item_separator, self.compact_key_separator
 
     def _wrap(self, tokens):
@@ -131,9 +148,45 @@ class CustomJSONEncoder(json.JSONEncoder):
                     yield token
                     continue
 
-                new_col = 1 + len(prefix) + self.indent + len(token)
+                new_col = 1 + len(prefix) + self._indent_len() + len(token)
                 if new_col <= self.width + 1:
-                    yield from ("\n", prefix, self.indent * " ")
+                    yield from ("\n", prefix, self._indent_str())
                     col = new_col
 
             yield token
+
+
+def _normalize_kwargs(kwargs, indentation_policy, width):
+    if kwargs.get("indent", None) is None:
+        kwargs.pop("indentation_policy")
+        kwargs.pop("width")
+    else:
+        kwargs["cls"] = CustomJSONEncoder
+        kwargs["indentation_policy"] = kwargs.get("indentation_policy",
+            indentation_policy or indentation_policy_default)
+        kwargs["width"] = kwargs.get("width", width)
+    return kwargs
+
+
+def wrap_dump(indentation_policy=None, width=0):
+    """Wrap the json.dump function to use the CustomJSONEncoder.
+
+    If indent is None, no indentation is used, otherwise the indentation is
+    determined by the indentation_policy and the width.
+    """
+    def wrapper(*args, **kwargs):
+        return dump(*args, **_normalize_kwargs(kwargs, indentation_policy,
+            width))
+    return wrapper
+
+
+def wrap_dumps(indentation_policy=None, width=0):
+    """Wrap the json.dumps function to use the CustomJSONEncoder.
+
+    If indent is None, no indentation is used, otherwise the indentation is
+    determined by the indentation_policy and the width.
+    """
+    def wrapper(*args, **kwargs):
+        return dumps(*args, **_normalize_kwargs(kwargs, indentation_policy,
+            width))
+    return wrapper
