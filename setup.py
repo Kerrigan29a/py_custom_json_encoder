@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Copyright (c) 2022 Javier Escalada Gómez
-All rights reserved.
-License: BSD 3-Clause Clear License (see LICENSE for details)
-"""
+
+# Copyright (c) 2022 Javier Escalada Gómez
+# All rights reserved.
+# License: BSD 3-Clause Clear License (see LICENSE for details)
 
 from setuptools import setup, find_packages
 from pathlib import Path

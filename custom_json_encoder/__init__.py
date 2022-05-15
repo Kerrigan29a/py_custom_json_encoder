@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
+
+# Copyright (c) 2022 Javier Escalada Gómez
+# All rights reserved.
+# License: BSD 3-Clause Clear License (see LICENSE for details)
+
 """
 A JSON encoder that allows customizing the indentation based on the content and
 the width of the line.
-
-Copyright (c) 2022 Javier Escalada Gómez
-All rights reserved.
-License: BSD 3-Clause Clear License (see LICENSE for details)
 """
 
 __author__ = "Javier Escalada Gómez"
 __email__ = "kerrigan29a@gmail.com"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __license__ = "BSD 3-Clause Clear License"
 
 # Inspiration: https://gist.github.com/jannismain/e96666ca4f059c3e5bc28abb711b5c92
