@@ -11,7 +11,7 @@ the width of the line.
 
 __author__ = "Javier Escalada Gómez"
 __email__ = "kerrigan29a@gmail.com"
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 __license__ = "BSD 3-Clause Clear License"
 
 # Inspiration: https://gist.github.com/jannismain/e96666ca4f059c3e5bc28abb711b5c92
@@ -64,39 +64,47 @@ class CustomJSONEncoder(JSONEncoder):
         return JSONEncoder.iterencode(self, o)
 
     def _iterencode(self, o, path):
-        depth = len(path)
-
         if isinstance(o, (list, tuple)):
-            nl_sep, ind_sep, it_sep, _ = self._config(path, o)
-
-            yield "["
-            for i, el in enumerate(o):
-                if i > 0:
-                    yield it_sep
-                yield from (nl_sep, (depth + 1) * ind_sep)
-                yield from self._iterencode(el, path + [i])
-            yield from (nl_sep, depth * ind_sep, "]")
-
+            yield from self._iterencode_list(o, path)
         elif isinstance(o, dict):
-            nl_sep, ind_sep, it_sep, key_sep = self._config(path, o)
-
-            yield "{"
-            for i, (k, v) in enumerate(o.items()):
-                if not isinstance(k, (str, int, float, bool)) and k is not None:
-                    raise TypeError(
-                        f"keys must be str, int, float, bool or None, not {k.__class__.__name__}"
-                    )
-                if i > 0:
-                    yield it_sep
-                yield from (nl_sep, (depth + 1) * ind_sep)
-                yield from self._parent_encode(k)
-                yield self.key_separator
-                yield from self._iterencode(v, path + [k])
-            yield from (nl_sep, depth * ind_sep, "}")
-
+            yield from self._iterencode_dict(o, path)
+        elif hasattr(o, "__dict__"): # Like types.SimpleNamespace or argparse.Namespace
+            yield from self._iterencode_dict(o.__dict__, path)
+        elif hasattr(o, "_asdict"): # Like collections.namedtuple
+            yield from self._iterencode_dict(o._asdict(), path)
+        elif hasattr(o, "__slots__"):
+            yield from self._iterencode_list(o.__slots__, path)
         else:
             yield from self._parent_encode(o)
     
+    def _iterencode_list(self, o, path):
+        depth = len(path)
+        nl_sep, ind_sep, it_sep, _ = self._config(path, o)
+        yield "["
+        for i, el in enumerate(o):
+            if i > 0:
+                yield it_sep
+            yield from (nl_sep, (depth + 1) * ind_sep)
+            yield from self._iterencode(el, path + [i])
+        yield from (nl_sep, depth * ind_sep, "]")
+    
+    def _iterencode_dict(self, o, path):
+        depth = len(path)
+        nl_sep, ind_sep, it_sep, key_sep = self._config(path, o)
+        yield "{"
+        for i, (k, v) in enumerate(o.items()):
+            if not isinstance(k, (str, int, float, bool)) and k is not None:
+                raise TypeError(
+                    f"keys must be str, int, float, bool or None, not {k.__class__.__name__}"
+                )
+            if i > 0:
+                yield it_sep
+            yield from (nl_sep, (depth + 1) * ind_sep)
+            yield from self._parent_encode(k)
+            yield key_sep
+            yield from self._iterencode(v, path + [k])
+        yield from (nl_sep, depth * ind_sep, "}")
+
     def _indent_str(self):
         if isinstance(self.indent, int):
             return self.indent * " "
