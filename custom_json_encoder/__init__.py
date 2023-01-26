@@ -11,7 +11,7 @@ the width of the line.
 
 __author__ = "Javier Escalada Gómez"
 __email__ = "kerrigan29a@gmail.com"
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __license__ = "BSD 3-Clause Clear License"
 
 # Inspiration: https://gist.github.com/jannismain/e96666ca4f059c3e5bc28abb711b5c92
@@ -68,12 +68,6 @@ class CustomJSONEncoder(JSONEncoder):
             yield from self._iterencode_list(o, path)
         elif isinstance(o, dict):
             yield from self._iterencode_dict(o, path)
-        elif hasattr(o, "__dict__"): # Like types.SimpleNamespace or argparse.Namespace
-            yield from self._iterencode_dict(o.__dict__, path)
-        elif hasattr(o, "_asdict"): # Like collections.namedtuple
-            yield from self._iterencode_dict(o._asdict(), path)
-        elif hasattr(o, "__slots__"):
-            yield from self._iterencode_list(o.__slots__, path)
         else:
             yield from self._parent_encode(o)
     
