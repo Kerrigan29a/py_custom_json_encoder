@@ -11,7 +11,7 @@ the width of the line.
 
 __author__ = "Javier Escalada Gómez"
 __email__ = "kerrigan29a@gmail.com"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __license__ = "BSD 3-Clause Clear License"
 
 # Inspiration: https://gist.github.com/jannismain/e96666ca4f059c3e5bc28abb711b5c92
@@ -93,10 +93,6 @@ class CustomJSONEncoder(JSONEncoder):
         nl_sep, ind_sep, it_sep, key_sep = self._config(path, o)
         yield "{"
         for i, (k, v) in enumerate(o.items()):
-            if not isinstance(k, (str, int, float, bool)) and k is not None:
-                raise TypeError(
-                    f"keys must be str, int, float, bool or None, not {k.__class__.__name__}"
-                )
             if i > 0:
                 yield it_sep
             yield from (nl_sep, (depth + 1) * ind_sep)
